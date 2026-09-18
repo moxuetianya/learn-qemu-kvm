@@ -1,0 +1,17 @@
+# OS / IDE 临时文件
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# 测试产生的临时文件
+/tmp/lab*/
+*.log
+*.pid
+
+# 不需要提交的个人 notes
+NOTES.md
+TODO-private.md
