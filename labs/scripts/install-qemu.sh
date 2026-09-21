@@ -18,8 +18,9 @@ echo "=========================================="
 case "${ID:-unknown}" in
     ubuntu|debian)
         apt-get update
+        # 注意: Debian/Ubuntu 没有 qemu-efi 包, x86 的 UEFI 固件由 ovmf 提供
         DEBIAN_FRONTEND=noninteractive apt-get install -y \
-            qemu-system-x86 qemu-system-arm qemu-utils qemu-efi \
+            qemu-system-x86 qemu-utils \
             qemu-kvm bridge-utils \
             libvirt-daemon-system libvirt-clients libvirt-daemon \
             virt-manager virt-viewer \

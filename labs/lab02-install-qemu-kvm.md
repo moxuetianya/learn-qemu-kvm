@@ -48,30 +48,34 @@ ls -l /dev/kvm
 ### 3. 验证 KVM 加速能跑
 
 ```bash
-# 启动一个空的 VM，立刻 quit
-qemu-system-x86_64 \
-    -machine accel=kvm \
-    -m 512 \
-    -nographic \
-    -kernel /dev/null 2>&1 | head -20
+# 启动一个空 VM（-S 表示 CPU 暂不执行），用 monitor 确认 KVM 生效
+qemu-system-x86_64 -machine accel=kvm -m 512 -nographic -S -monitor stdio
 ```
 
-如果看到：
+在 `(qemu)` 提示符下：
+
 ```
-qemu-system-x86_64: -machine accel=kvm: Machine type 'pc' was not found
+(qemu) info kvm
+kvm support: enabled
+(qemu) quit
 ```
-但同一条命令去掉 `-kernel /dev/null` 能跑，就是 `/dev/null` 当 kernel 出错。试：
+
+`kvm support: enabled` = KVM 加速可用。
+
+注意：不要用 `-kernel /dev/null` 这类写法，`-kernel` 需要真实的内核镜像文件，
+零字节文件会在加载阶段直接报错（报错信息还有误导性）。
+
+如果启动时报 `failed to initialize kvm`，通常是 /dev/kvm 权限问题或 kvm 模块没加载，
+回看上一节的检查项。
+
+也可以用非交互方式做冒烟测试（没报错 = KVM 加速可用）：
 
 ```bash
-# 拿任意一个小镜像做 kernel
-# 或者跳过这一步，只验证 qemu 启动语法
 qemu-system-x86_64 -machine accel=kvm,type=q35 -m 512 -nographic -S -pidfile /tmp/x.pid &
 sleep 1
 kill $(cat /tmp/x.pid) 2>/dev/null
 rm -f /tmp/x.pid
 ```
-
-没报错 = KVM 加速可用。
 
 ### 4. 把用户加入组
 

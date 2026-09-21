@@ -27,6 +27,7 @@
 | 17 | [KVM 源码导读](course/17-KVM源码导读.md) | vm entry/exit | lab10 |
 | 18 | [与容器 / 云原生的取舍](course/18-与容器云原生的取舍.md) | VM vs Container | – |
 | 19 | [常见故障排查](course/19-常见故障排查.md) | troubleshooting | – |
+| 98 | [学习问答 QA](course/98-QA-学习问答.md) | 环境实践 + 硬件原理答疑 | – |
 | 99 | [附录](course/99-附录.md) | 速查表、术语 | – |
 
 ## 🟩 实验（`labs/`）
