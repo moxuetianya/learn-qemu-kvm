@@ -375,3 +375,7 @@ gdb
 
 - [`refs/learn-kvm/docs/QEMU基本结构.md`](../refs/learn-kvm/docs/QEMU基本结构.md)
 - [`refs/learn-kvm/docs/QEMU工作原理.md`](../refs/learn-kvm/docs/QEMU工作原理.md)
+
+---
+
+⬅️ 上一章：[15 · 跨架构模拟实战](15-跨架构模拟实战.md) · [📚 返回目录](../INDEX.md) · 下一章 ➡️：[17 · KVM 源码导读](17-KVM源码导读.md)

@@ -70,6 +70,16 @@ ssh root@192.168.122.x
 
 ### 模式 3：bridge（直连物理网桥，让 VM 跟 host 同网段）
 
+> 🤖 网桥的创建/查看/删除可用 [`scripts/setup-bridge.sh`](scripts/setup-bridge.sh)：
+>
+> ```bash
+> sudo bash labs/scripts/setup-bridge.sh create eth0   # 创建 br0 并挂 eth0
+> sudo bash labs/scripts/setup-bridge.sh status        # 查看
+> sudo bash labs/scripts/setup-bridge.sh delete        # 还原
+> ```
+>
+> ⚠️ 把正在使用的物理网卡挂上桥会短暂断网；远程 SSH 操作请先看下面「常见失败」。
+
 ```bash
 # 创建桥
 sudo ip link add br0 type bridge
@@ -140,6 +150,31 @@ sudo ip link set macvtap0 up
 ```
 
 ✅ **适用**：高性能（不走 Linux bridge）；**不适用**：同一网卡上 VM 多时需要 switch 行为。
+
+## 常见失败
+
+| 现象 | 原因 | 解决 |
+| --- | --- | --- |
+| 挂桥后 SSH 立即断开、再也连不上 | 物理网卡 IP 没清干净 / 桥没配管理地址 | 见下方「断网自救」 |
+| VM 拿不到同网段 IP | br0 上没起 DHCP，VM 内没静态配 IP | VM 内 `ip addr add` 静态配（见步骤） |
+| `qemu-system-x86_64: bridge helper failed` | qemu-bridge-helper 无权限 | `sudo chmod u+s /usr/lib/qemu/qemu-bridge-helper` 并配置 `/etc/qemu/bridge.conf` |
+| 物理网卡是 WiFi | 802.11 帧头决定 WiFi 做不了普通桥 | 换有线，或改用 macvtap/ routed 模式 |
+| 重启后 br0 消失 | ip 命令配置不持久 | 用 nmcli/netplan 持久化，或每次实验重建 |
+
+**断网自救**（挂桥前先读）：
+
+```bash
+# 1. 物理机上提前开一个 root shell 或 tmux，断了也能操作
+sudo tmux new -s rescue
+
+# 2. 断网后还原（在 rescue 会话里）
+sudo ip link set eth0 nomaster
+sudo ip link delete br0
+sudo ip addr add <原IP>/<掩码> dev eth0
+# DHCP 环境: sudo dhclient eth0
+```
+
+远程机房无控制台时，先在测试机/虚机里演练一遍再上生产。
 
 ## 优劣对比速记
 

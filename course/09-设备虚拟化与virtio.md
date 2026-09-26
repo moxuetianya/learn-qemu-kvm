@@ -76,6 +76,67 @@ struct vring {
 - **KICK**：驱动 → 后端（写 MMIO/PIO 寄存器）
 - **NOTIFY**：后端 → 驱动（KVM_IRQFD 注入中断）
 
+### 2.4 一次发包的完整旅程（数据路径走读）
+
+以 virtio-net 发一个 TCP 包为例，把三层模型串起来：
+
+```
+① 客户机应用 write(socket)
+        │
+② 内核协议栈构好 skb，交给 virtio_net 驱动
+        │
+③ 驱动把数据帧写进共享内存，描述符挂到 desc 表，
+   头索引写入 avail->ring[idx]，idx++
+        │  （到此为止：全是客户机普通内存写，零 VM exit）
+④ 驱动 KICK：写设备的 notify 寄存器（一次 MMIO 写 → VM exit）
+        │
+⑤ KVM 把这次 exit 直接路由给后端：
+   ├─ virtio-net-pci（QEMU 后端）→ QEMU 线程被唤醒
+   └─ vhost-net（内核后端）→ 内核线程被唤醒（eventfd，不进 QEMU）
+        │
+⑥ 后端从 avail 环取描述符，读出数据帧
+   ├─ QEMU 后端：走宿主机 tap 设备 → 内核网络栈
+   └─ vhost-net：直接调内核网络栈发送（零拷贝路径）
+        │
+⑦ 发送完成，后端把描述符索引写进 used->ring[idx]
+   并通过 irqfd 向客户机注入一个 virtio 中断（一次 VM entry）
+        │
+⑧ 客户机 virtio_net 中断处理：回收描述符，唤醒等待的发送队列
+```
+
+数一数硬件级代价：**只有 ④（一次 VM exit）和 ⑦（一次中断注入）**。
+中间所有数据搬运都在共享内存里完成——这就是 virtio 快的本质。
+
+对比全模拟 e1000：驱动要写十几个寄存器（每写一次都可能 VM exit），
+数据还要经 QEMU 在设备模拟层搬运。一次发包的 VM exit 次数差一个数量级。
+
+### 2.5 通知优化：avail 缓冲与 event idx
+
+上面 ④⑦ 两步还能再省：
+
+**批量与延迟通知（driver 侧）**：协议栈一次 often 有多个包要发。
+驱动攒一批，只 KICK 一次；后端同理，处理完一批只注入一个中断。
+这就是「中断合并」在 virtio 上的自然实现。
+
+**VRING_F_EVENT_IDX（双方协商的特性位）**：
+
+```
+used->avail_event  ← 后端写：驱动看到这个值之前不必再 KICK
+avail->used_event  ← 驱动写：后端看到这个值之前不必再注入中断
+```
+
+本质是**生产者-消费者之间的背压**：对方还没消费到某个水位，就先别叫醒它。
+高频小包场景（网络 PPS、存储 iodepth 高时）能显著减少通知次数。
+
+```bash
+# 宿主机侧观察 vhost-net 的通知抑制效果（需要 root）
+sudo cat /sys/kernel/debug/vhost/net0 2>/dev/null || \
+sudo cat /proc/net/vhost-net 2>/dev/null
+```
+
+> 一句话：virtqueue 负责让数据搬运免费（共享内存），
+> event idx 负责让「叫醒对方」也尽可能免费（少通知）。
+
 ## 3. virtio 设备家族
 
 | 设备 | 前端驱动 | 后端 | 用途 |
@@ -146,6 +207,50 @@ vhost-user.socket=/tmp/vhost-user.sock
   <target dev='sda' bus='scsi'/>
 </disk>
 ```
+
+### 4.5 数据路径对比：QEMU 后端 vs vhost-net
+
+```
+【virtio-net-pci：QEMU 用户态后端】
+
+  客户机 KICK
+      │ VM exit
+      ▼
+  KVM ──唤醒──► QEMU 线程（用户态切换 + 上下文切换）
+      │             │ 从 virtqueue 取包
+      │             ▼
+      │          tap 字符设备（内核）
+      │             │
+      │             ▼
+      │          宿主机网络栈 ──► 物理网卡
+      │
+      └── 数据路径：客户机内存 → QEMU（可能两次拷贝）→ tap → 内核栈
+
+【vhost-net：内核态后端】
+
+  客户机 KICK
+      │ VM exit
+      ▼
+  KVM ──eventfd 直达──► vhost 内核线程
+                          │ 从 virtqueue 取包（直接读共享内存）
+                          ▼
+                       宿主机网络栈 ──► 物理网卡
+                          （大包走 zero-copy 直接到 tap/物理设备）
+
+   省掉了：QEMU 用户态唤醒、QEMU↔内核的系统调用、
+   部分场景的数据拷贝
+```
+
+| 维度 | QEMU 后端 | vhost-net |
+| --- | --- | --- |
+| 每包上下文切换 | VM exit + 内核↔用户态 | 仅 VM exit |
+| 数据拷贝 | 通常 2 次 | 大包可 zero-copy |
+| 可配置性 | 高（QEMU 参数） | 中 |
+| 出问题排查 | 容易（strace/gdb QEMU） | 难（要看内核线程） |
+| 适用 | 默认就好 | 高 PPS / 网络密集型 |
+
+> 经验：Linux 客户机 + virtio-net 时，vhost-net 默认就是开着的（`-netdev tap,vhost=on`）。
+> 刻意关掉（`vhost=off`）通常只为了调试。
 
 ## 5. Windows 怎么用 virtio
 
@@ -266,7 +371,42 @@ cat /sys/block/vda/queue/nr_requests
 qemu-system-x86_64 -d guest_errors,trace:virtio* ...
 ```
 
-### 9.3 内核态 vhost
+### 9.3 客户机内真实输出（Alpine/Linux 6.x 示例）
+
+```sh
+# 客户机：ls /sys/bus/virtio/devices/
+virtio0   # 块设备
+virtio1   # 网卡
+
+# 每个 virtio 设备能看到协商出来的特性位
+cat /sys/bus/virtio/devices/virtio1/device_features
+# 0x180023c1d3b24bd  （每位一个特性，如 EVENT_IDX、MQ、ANY_LAYOUT...）
+
+# 网卡多队列是否生效
+ls /sys/class/net/eth0/queues/
+rx-0  rx-1  rx-2  rx-3  tx-0  tx-1  tx-2  tx-3   # 4 队列
+
+# 中断合并参数（驱动侧）
+ethtool -c eth0
+```
+
+宿主机侧（vhost-net 视角）：
+
+```bash
+# 看 QEMU 进程的线程：vhost 内核线程以进程形式出现
+ps -T -p $(pidof qemu-system-x86_64) | grep vhost
+#  PID SPID TTY TIME CMD
+#  1234 1240 ? 00:00:01 vhost-1234
+
+# 每队列统计（tracepoint，需要 root）
+sudo perf stat -e vhost:vhost_virtqueue_ioctl \
+    -a -- sleep 5
+```
+
+> 排查思路：客户机 `ethtool -l eth0`（队列数）→ 宿主机 `ps -T`（vhost 线程数）
+> → `perf -e virtio:*`（通知频率），三层对得上说明多队列真的通了。
+
+### 9.4 内核态 vhost
 
 ```bash
 sudo cat /sys/kernel/debug/vhost/net 0
@@ -292,6 +432,8 @@ sudo cat /sys/kernel/debug/vhost/net 0
 ## 12. 小结
 
 - **virtio = 共享内存环形队列**：驱动 ↔ 设备无 VM exit
+- 一次 I/O 只有 KICK（一次 VM exit）+ NOTIFY（一次中断注入）两处硬件级代价；
+  event idx 进一步把通知也省了
 - **vhost** 把后端搬到内核，进一步省 QEMU 上下文切换
 - **Windows 装 virtio** 用专用 ISO
 - **virtio-gpu / vsock / balloon** 是高级特性
@@ -308,3 +450,7 @@ sudo cat /sys/kernel/debug/vhost/net 0
 - [`refs/learn-kvm/docs/QEMU功能/虚拟处理器.md`](../refs/learn-kvm/docs/QEMU功能/虚拟处理器.md)
 - [`refs/learn-kvm/docs/QEMU功能/虚拟USB.md`](../refs/learn-kvm/docs/QEMU功能/虚拟USB.md)
 - [`refs/learn-kvm/docs/QEMU功能/其他虚拟外设.md`](../refs/learn-kvm/docs/QEMU功能/其他虚拟外设.md)
+
+---
+
+⬅️ 上一章：[08 · 网络虚拟化详解](08-网络虚拟化详解.md) · [📚 返回目录](../INDEX.md) · 下一章 ➡️：[10 · 图形与显示方案对比](10-图形与显示方案对比.md)

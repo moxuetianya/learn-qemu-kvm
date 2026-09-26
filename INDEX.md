@@ -2,6 +2,9 @@
 
 > 本文是课程的总目录，按学习路径组织。每个条目都标注
 > 「课程章（自写）/ 参考 ref（来自 `refs/learn-kvm/`）」。
+> 想打卡记录进度？复制一份 [PROGRESS.md](PROGRESS.md) 开始。
+
+**导航**：[🧪 实验](labs/README.md) · [🟨 速查表](#-速查cheatsheet) · [🟥 参考资料](#-参考资料refslearn-kvm-git-subtree-自上游仓库) · [📈 学习进度](PROGRESS.md)
 
 ## 🟦 课程正篇（`course/`）
 

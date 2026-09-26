@@ -86,7 +86,10 @@ bash labs/scripts/check-vt.sh
 # 3. 安装 QEMU + KVM + libvirt
 bash labs/scripts/install-qemu.sh
 
-# 4. 跑起第一台 VM
+# 4. 验证环境（期望看到「环境就绪」）
+bash labs/scripts/verify-install.sh
+
+# 5. 跑起第一台 VM（自动选 KVM，无 KVM 回退 TCG）
 bash labs/scripts/start-vm.sh
 ```
 
@@ -115,7 +118,15 @@ git subtree push --prefix=refs/learn-kvm https://github.com/yifengyou/learn-kvm.
 - **运维老兵**：跳过 01/02，直接看 03/07/08/09/12/13
 - **内核开发者**：重点看 06/16/17，对照源码读
 - **临时查问题**：直接看 [cheatsheet/](cheatsheet/) 和 `course/19-常见故障排查.md`
+- **想系统打卡**：复制 [PROGRESS.md](PROGRESS.md) 为 `MY-PROGRESS.md`，按四个阶段推进
 
 ## 🤝 贡献与反馈
 
 提交 issue 或 PR 都欢迎，但本仓库主轴是「教程」，不接受随意翻译的 PR。
+
+PR 前请自查（CI 也会跑同样的检查）：
+
+```bash
+python3 scripts/check-links.py   # markdown 内部链接
+bash -n labs/scripts/*.sh        # bash 语法
+```

@@ -12,6 +12,16 @@
 
 ## 实验步骤
 
+> 🤖 步骤 1-3（创建/稀疏对比/qcow2 特性）可用 [`scripts/bench-storage.sh`](scripts/bench-storage.sh) 一键跑完：
+>
+> ```bash
+> bash labs/scripts/bench-storage.sh            # 全部
+> SKIP_FIO=1 bash labs/scripts/bench-storage.sh # 跳过 fio，只看特性
+> FIO_RUNTIME=30 bash labs/scripts/bench-storage.sh  # fio 跑久一点更稳
+> ```
+>
+> 脚本跑完后再手动做下面的步骤，加深理解。
+
 ### 1. 创建四种镜像
 
 ```bash

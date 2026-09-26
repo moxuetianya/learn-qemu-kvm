@@ -289,3 +289,7 @@ KVM 选了第一种——这是它性能好的核心原因。
 - [`refs/learn-kvm/docs/KVM工作原理/KVM工作原理.md`](../refs/learn-kvm/docs/KVM工作原理/KVM工作原理.md)
 - [`refs/learn-kvm/docs/KVM内核模块源码分析/KVM源码分析-基本工作原理.md`](../refs/learn-kvm/docs/KVM内核模块源码分析/KVM源码分析-基本工作原理.md)
 - [`refs/learn-kvm/docs/KVM内核模块源码分析/KVM源码分析-虚拟机的创建与运行.md`](../refs/learn-kvm/docs/KVM内核模块源码分析/KVM源码分析-虚拟机的创建与运行.md)
+
+---
+
+⬅️ 上一章：[05 · 第一个虚拟机实战](05-第一个虚拟机实战.md) · [📚 返回目录](../INDEX.md) · 下一章 ➡️：[07 · 存储虚拟化详解](07-存储虚拟化详解.md)

@@ -15,3 +15,8 @@ Thumbs.db
 # 不需要提交的个人 notes
 NOTES.md
 TODO-private.md
+MY-PROGRESS.md
+
+# python
+__pycache__/
+*.pyc

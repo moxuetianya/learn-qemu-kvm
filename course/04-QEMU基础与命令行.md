@@ -270,3 +270,7 @@ bash labs/scripts/start-vm.sh /tmp/test.qcow2
 - [`refs/learn-kvm/docs/QEMU工作原理.md`](../refs/learn-kvm/docs/QEMU工作原理.md)
 - [`refs/learn-kvm/docs/QEMU使用.md`](../refs/learn-kvm/docs/QEMU使用.md)
 - [`refs/learn-kvm/docs/QEMU使用/QEMU运行x86_64虚拟机.md`](../refs/learn-kvm/docs/QEMU使用/QEMU运行x86_64虚拟机.md)
+
+---
+
+⬅️ 上一章：[03 · 环境搭建实战](03-环境搭建实战.md) · [📚 返回目录](../INDEX.md) · 下一章 ➡️：[05 · 第一个虚拟机实战](05-第一个虚拟机实战.md)

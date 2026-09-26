@@ -23,7 +23,10 @@
 | --- | --- |
 | [`check-vt.sh`](scripts/check-vt.sh) | 一键检查硬件虚拟化能力 |
 | [`install-qemu.sh`](scripts/install-qemu.sh) | 多发行版装 QEMU/KVM/libvirt |
-| [`start-vm.sh`](scripts/start-vm.sh) | 一键后台启动 VM（最简命令） |
+| [`verify-install.sh`](scripts/verify-install.sh) | lab02 装完后的环境自检 |
+| [`start-vm.sh`](scripts/start-vm.sh) | 一键后台启动 VM（自动选 KVM/TCG） |
+| [`bench-storage.sh`](scripts/bench-storage.sh) | lab04 镜像格式 + qcow2 特性对比 |
+| [`setup-bridge.sh`](scripts/setup-bridge.sh) | lab05 网桥 br0 创建/查看/还原 |
 
 ## 实验报告建议格式
 

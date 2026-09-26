@@ -1,0 +1,35 @@
+name: docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - "**.md"
+      - "labs/scripts/**"
+      - ".github/workflows/ci.yml"
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 检查 markdown 内部链接
+        run: python3 scripts/check-links.py --root .
+
+  script-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: bash 语法检查
+        run: |
+          fail=0
+          for s in labs/scripts/*.sh; do
+            bash -n "$s" || fail=1
+          done
+          exit $fail
+      - name: python 语法检查
+        run: python3 -m py_compile scripts/check-links.py

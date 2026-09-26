@@ -403,3 +403,7 @@ virsh domstats lab03
 - [`refs/learn-kvm/docs/KVM核心基础功能/Qemu-KVM基本格式.md`](../refs/learn-kvm/docs/KVM核心基础功能/Qemu-KVM基本格式.md)
 - [`refs/learn-kvm/docs/KVM核心基础功能/Qemu-KVM网络配置.md`](../refs/learn-kvm/docs/KVM核心基础功能/Qemu-KVM网络配置.md)
 - [`refs/learn-kvm/docs/KVM核心基础功能/Qemu-KVM图形界面.md`](../refs/learn-kvm/docs/KVM核心基础功能/Qemu-KVM图形界面.md)
+
+---
+
+⬅️ 上一章：[10 · 图形与显示方案对比](10-图形与显示方案对比.md) · [📚 返回目录](../INDEX.md) · 下一章 ➡️：[12 · 性能调优与诊断](12-性能调优与诊断.md)

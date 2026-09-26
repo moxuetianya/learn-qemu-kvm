@@ -515,3 +515,7 @@ gdb vmlinux
 - [`refs/learn-kvm/docs/KVM内核模块源码分析/KVM的初始化流程.md`](../refs/learn-kvm/docs/KVM内核模块源码分析/KVM的初始化流程.md)
 - [`refs/learn-kvm/docs/KVM内核模块源码分析/KVM源码分析-虚拟机的创建与运行.md`](../refs/learn-kvm/docs/KVM内核模块源码分析/KVM源码分析-虚拟机的创建与运行.md)
 - [`refs/learn-kvm/docs/KVM内核模块源码分析/KVM源码分析-CPU虚拟化.md`](../refs/learn-kvm/docs/KVM内核模块源码分析/KVM源码分析-CPU虚拟化.md)
+
+---
+
+⬅️ 上一章：[16 · QEMU 源码导读](16-QEMU源码导读.md) · [📚 返回目录](../INDEX.md) · 下一章 ➡️：[18 · 与容器、云原生的取舍](18-与容器云原生的取舍.md)

@@ -129,6 +129,13 @@ virt-manager
 
 ## 输出记录
 
+> 🤖 本 lab 可用 [`scripts/verify-install.sh`](scripts/verify-install.sh) 一键验证：
+>
+> ```bash
+> bash labs/scripts/verify-install.sh
+> # 期望最后一行: ✅ 环境就绪，可以开始 lab03
+> ```
+
 回答：
 
 1. QEMU 版本是多少？
