@@ -191,6 +191,90 @@ change ide1-cd0 /path/new.iso   # 换 ISO
 device_add ...        # 热插设备
 ```
 
+> `-nographic` / `-display none` / `-monitor` 三者各控制什么、为什么
+> `-nographic` 不能与 `-monitor stdio` 同用，见 6.3 的前端/后端模型。
+
+### 6.3 `-nographic` 控制的到底是谁？（前端/后端模型）
+
+`-nographic` / `-display none` / `-monitor` 这三个参数**只改 QEMU 宿主侧的数据路由，
+不改变 guest 看到的硬件**：串口还是那个 0x3F8 端口的 16550 UART，显卡还是那张 VGA 卡，
+变的只是"这些设备的数据线另一端插在宿主机哪里"。
+
+QEMU 把每个外设拆成两半：
+
+- **前端**：模拟出来的硬件芯片，guest 驱动和它打交道（`-serial` / `-vga` / `-device` 决定**存在与否**）
+- **后端**：数据在宿主机上的真实去向（本节这三个参数只动这半边）
+
+```
+┌──────────────── Guest ────────────────┐
+│ printk("boot...") → 写 /dev/ttyS0      │
+│ 驱动 out 0x3F8（UART 寄存器）           │
+└──────────────┬────────────────────────┘
+               │ 模拟硬件边界
+        ┌──────┴──────┐
+        │ 串口前端     │ ← guest 只看到这半边
+        └──────┬──────┘
+               │ 后端路由（-nographic / -monitor / -display 管这里）
+   ┌───────────┼───────────┬─────────────┐
+   ▼           ▼           ▼             ▼
+ stdio     tcp socket    file         vc / null
+（终端）   （telnet）   （日志）     （不可见/丢弃）
+```
+
+QEMU 里有**三条互相独立**的流，混淆都来自把它们当成一条：
+
+| 流 | 数据由谁产生 | 内容 |
+| --- | --- | --- |
+| 显卡输出 | guest | BIOS 自检画面、framebuffer、桌面 |
+| 串口数据 | guest | 内核 `console=ttyS0` 日志、getty 登录提示符 |
+| monitor | **QEMU 自己** | `info` / `stop` / `savevm` / `migrate` 管理命令 |
+
+monitor 是 QEMU 进程自己的管理控制台，guest 完全不知道它的存在——类比物理服务器
+的 iDRAC/iLO 带外管理口，而不是机箱上接的显示器。
+
+**`-nographic` 是一条复合快捷方式**：
+
+```
+-nographic  ≈  -display none  +  -serial mon:stdio  （+ 并口 → null）
+```
+
+即：关图形 + 串口接到终端 + monitor **复用同一条 stdio**（`mon:` 就是"把 monitor
+也复用进来"），所以需要 `Ctrl-A c` 在串口 ↔ monitor 之间切换。
+
+用 `info chardev` 可以亲眼看路由（QEMU 8.2 实测）：
+
+```
+$ ... -display none -S -monitor stdio
+compat_monitor0: filename=stdio    ← monitor 独占终端
+serial0:         filename=vc       ← 串口留在不可见的虚拟标签页
+
+$ ... -nographic -S
+parallel0:      filename=null      ← 并口直接丢弃
+serial0:        filename=mux       ← 串口接"复用器"
+serial0-base:   filename=stdio     ← 复用器底座是终端，monitor 也挂在这上面
+```
+
+组合对照表：
+
+| 命令 | guest 显卡输出 | guest 串口 | QEMU monitor | 适用场景 |
+| --- | --- | --- | --- | --- |
+| 默认（桌面环境） | GTK 窗口 | 窗口内标签页 | 窗口内标签页（Ctrl-Alt-2） | 本地图形实验 |
+| `-nographic` | 丢弃 | **你的终端** | 同一终端复用，`Ctrl-A c` 切换 | SSH/服务器、串口控制台 guest |
+| `-display none` | 丢弃 | 丢弃（vc 不可见） | 丢弃（vc 不可见） | 纯后台跑（配 `-daemonize`） |
+| `-display none -monitor stdio` | 丢弃 | 丢弃 | **你的终端，独占** | 只要管理口（lab02 验证 KVM） |
+| `-display none -serial stdio -monitor none` | 丢弃 | **你的终端，独占** | 关闭 | 只看 guest 串口日志 |
+
+两个易踩的坑：
+
+- `-nographic -monitor stdio` 必然报 `cannot use stdio by multiple character
+  devices`——stdio 已经挂在 mux 上，`-monitor stdio` 又要独占第二份，QEMU 拒绝
+- guest 不配 `console=ttyS0` / getty 的话，`-nographic` 终端永远只有 QEMU 横幅：
+  线递过去了，guest 得愿意说话（cloud 镜像默认开串口，桌面 ISO 默认不开）
+
+真正增删 guest 硬件的是另一类参数：`-vga none`（拔显卡）、`-serial none`（拔串口）、
+`-nodefaults`（不给默认设备）。一句话：**这三个参数是在机房里插拔"线缆"，
+guest 机箱上的接口一个没动。**
+
 ## 7. 命令速查
 
 | 想做什么 | 命令 |

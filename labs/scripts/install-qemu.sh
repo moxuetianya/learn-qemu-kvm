@@ -19,18 +19,19 @@ case "${ID:-unknown}" in
     ubuntu|debian)
         apt-get update
         # 注意: Debian/Ubuntu 没有 qemu-efi 包, x86 的 UEFI 固件由 ovmf 提供
+        # 注意: Debian/Ubuntu 上 virt-install 命令由 virtinst 包提供（RHEL 系才叫 virt-install）
         DEBIAN_FRONTEND=noninteractive apt-get install -y \
             qemu-system-x86 qemu-utils \
             qemu-kvm bridge-utils \
             libvirt-daemon-system libvirt-clients libvirt-daemon \
-            virt-manager virt-viewer \
+            virtinst virt-viewer \
             ovmf genisoimage \
             cloud-image-utils \
             libguestfs-tools
         ;;
     rhel|centos|rocky|almalinux|fedora)
         dnf -y install \
-            qemu-kvm qemu-img libvirt virt-install virt-manager \
+            qemu-kvm qemu-img libvirt virt-install \
             virt-viewer \
             libguestfs-tools \
             bridge-utils \
@@ -40,7 +41,7 @@ case "${ID:-unknown}" in
     opensuse*|sles)
         zypper --non-interactive install \
             qemu qemu-tools qemu-x86 qemu-arm \
-            libvirt libvirt-client virt-manager \
+            libvirt libvirt-client virt-install \
             libguestfs \
             bridge-utils \
             ovmf
@@ -49,7 +50,7 @@ case "${ID:-unknown}" in
         echo "未识别的发行版 ${ID:-unknown}，请手动安装："
         echo "  - qemu-system-x86_64 (含 qemu-img / qemu-kvm)"
         echo "  - libvirt (libvirtd + virsh)"
-        echo "  - virt-install / virt-manager"
+        echo "  - virt-install"
         echo "  - OVMF (UEFI 固件)"
         exit 1
         ;;

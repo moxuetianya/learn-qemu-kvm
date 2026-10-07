@@ -49,7 +49,10 @@ ls -l /dev/kvm
 
 ```bash
 # 启动一个空 VM（-S 表示 CPU 暂不执行），用 monitor 确认 KVM 生效
-qemu-system-x86_64 -machine accel=kvm -m 512 -nographic -S -monitor stdio
+# 注意: -nographic 已把串口+monitor 复用在 stdio 上（Ctrl-A c 切换），
+#       再加 -monitor stdio 会报 "cannot use stdio by multiple character devices"，
+#       所以这里用 -display none 关图形，让 monitor 独占 stdio
+qemu-system-x86_64 -machine accel=kvm -m 512 -display none -S -monitor stdio
 ```
 
 在 `(qemu)` 提示符下：
