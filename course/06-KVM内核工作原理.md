@@ -283,6 +283,16 @@ KVM 选了第一种——这是它性能好的核心原因。
 3. KVM 关闭时会发生什么？QEMU 进程退出 → VM 自动停吗？
 4. `kvm_x86_ops` 一共多少个函数指针？为啥这么设计？
 
+<details>
+<summary>参考答案（先自己想再看）</summary>
+
+1. 复用 Linux 已有的调度器、内存管理、电源管理、驱动与安全模型，KVM 只需要补 CPU 虚拟化那一层薄薄的代码，省掉了自研 hypervisor 的大量基础设施，还能直接借力硬件（VMX/SVM）和内核成熟机制（mmap、AIO、网络栈）。代价是代码与内核版本耦合、进内核有门槛，但换来极低的开发和维护成本。
+2. 阻塞的。`KVM_RUN` 会一直运行客户机直到发生一次 VM exit（IO/MMIO/HLT 等）才返回，期间 vCPU 线程被调度器置于可睡眠状态。所以 vCPU 本质上就是一个普通 Linux 线程，会像其它线程一样被 CFS 抢占和调度。
+3. QEMU 进程退出并关闭所有 fd 时，内核通过 KVM 设备的 release 回调销毁对应的 `struct kvm`，VM 随之停止并释放内存槽、vCPU、EPT 等资源，不会留下「孤儿」VM。也就是说 VM 的生命周期绑定在打开 `/dev/kvm` 的那个进程上。
+4. 是一张约上百个函数指针的 ops 表，而且随内核版本不断增加，覆盖硬件开关、vCPU 创建与运行、VM exit 处理、中断与内存虚拟化等。它用一张「接口表」把 Intel VMX 和 AMD SVM 的差异隔离在各自后端文件里，通用逻辑（x86.c）只写一份。
+
+</details>
+
 ## 13. 参考资料
 
 - [`refs/learn-kvm/docs/KVM基本结构/KVM基本结构.md`](../refs/learn-kvm/docs/KVM基本结构/KVM基本结构.md)

@@ -445,6 +445,16 @@ sudo cat /sys/kernel/debug/vhost/net 0
 3. vhost-net 跟 vhost-user 的根本区别？
 4. 客户机里 balloon 驱动把内存「还」给宿主机，是直接物理页交换吗？
 
+<details>
+<summary>参考答案（先自己想再看）</summary>
+
+1. 一次传输通常是 1 次 KICK（驱动写 notify 寄存器，一次 VM exit）+ 1 次 NOTIFY（后端用 irqfd 注入中断，一次 VM entry）。可以合并：驱动攒一批后只 KICK 一次、后端处理一批只注入一个中断，即中断合并；协商 `VRING_F_EVENT_IDX` 后用 avail_event/used_event 约定水位，进一步压制不必要的通知。
+2. 内核用流哈希（RSS/重定向表，对 TCP/UDP 五元组取哈希）把同一连接固定映射到某个队列，接收端用同一套哈希保证同连接落在同一队列，从而不会因跨队列处理而乱序。发送方向也按流选队列；只要同一流始终走同一队列，顺序就能保证。
+3. 根本区别是后端运行位置：vhost-net 的后端是宿主机内核线程，直接访问共享内存和内核网络栈；vhost-user 的后端是另一个用户态进程（如 OVS-DPDK、SPDK），通过 vhost-user 协议用共享内存加 unix socket 通信。前者省去内核↔用户态切换但受内核实现约束，后者可完全绕过内核、性能更高，但要自己维护用户态转发进程。
+4. 不是简单的物理页交换。balloon 驱动在客户机里分配一批页（inflate 时把页「借」给设备），把这批页的物理地址通过 virtqueue 报告给 QEMU/vhost；宿主侧再把对应 HVA 交给内核回收（如 `madvise(MADV_DONTNEED)`），客户机看到的可用内存随之减少。deflate 时反向操作，把页还给客户机。
+
+</details>
+
 ## 14. 参考资料
 
 - [`refs/learn-kvm/docs/QEMU功能/虚拟处理器.md`](../refs/learn-kvm/docs/QEMU功能/虚拟处理器.md)

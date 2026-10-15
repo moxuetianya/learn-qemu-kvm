@@ -371,6 +371,16 @@ gdb
 3. QEMU 的「内存树」（mtree）是怎么组织的？
 4. `virtio-net` 与 `vhost-net` 的代码在哪里分流？
 
+<details>
+<summary>参考答案（先自己想再看）</summary>
+
+1. QEMU 是纯 C 写的跨平台项目，需要一个运行时的对象系统来支持类型注册、继承、属性访问和自动生命周期管理。QOM 用 `TypeInfo` 注册类型、用结构体嵌套实现单继承，既避免了 C++ 的 ABI/异常等负担，也让设备与机型能在运行时动态组装、被 `info qom-tree` 观察。
+2. TB 是把一段以跳转/分支结尾的连续客户机指令翻译好的宿主机指令块，存放在 code cache 中。以 TB 为单位可以「翻译一次、执行多次」——`tb_lookup` 命中就直接跑，未命中才 `tb_gen_code`；同时 TB 边界也是处理中断和异常的安全点，兼顾了速度与正确性。
+3. 它是挂在 `AddressSpace` 下的一棵 `MemoryRegion` 树：根节点代表整个地址空间，子区域通过 `memory_region_add_subregion` 挂到父区域的某段偏移上，分别表示 RAM、MMIO、IO 端口等。一次访问沿树找到叶子 region 后调用其 `ops` 处理，可用 `info mtree` 直观查看。
+4. 分流发生在后端通知（kick）的处理路径上：启用 vhost 时，内核 `vhost_net.ko` 通过 `/dev/vhost-net` 直接消费 vring、绕开用户态；未启用时由 QEMU 的 `hw/net/virtio-net.c` 在 vCPU/main 线程里处理。是否走内核取决于 `-netdev`/`-device virtio-net` 的 `vhost=on` 等属性。
+
+</details>
+
 ## 16. 参考资料
 
 - [`refs/learn-kvm/docs/QEMU基本结构.md`](../refs/learn-kvm/docs/QEMU基本结构.md)

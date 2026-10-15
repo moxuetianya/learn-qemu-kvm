@@ -16,6 +16,8 @@
 | 08 | [CPU pin + NUMA + hugepage](lab08-cpu-pinning-numa.md) | ★★★ | 30 min | lab03 |
 | 09 | [实时迁移](lab09-live-migration.md) | ★★★★ | 60 min | lab03+共享存储 |
 | 10 | [调试 KVM 内核模块](lab10-debug-kernel.md) | ★★★★★ | 120 min | 内核编译 |
+| 11 | [UEFI 固件（OVMF）启动实战](lab11-uefi-ovmf.md) | ★★★ | 40 min | lab03 |
+| 12 | [为 QEMU 添加自定义设备](lab12-qemu-device.md) | ★★★★ | 90 min | lab03 + C 编译 |
 
 ## 配套脚本（`scripts/`）
 

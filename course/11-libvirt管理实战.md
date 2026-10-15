@@ -79,8 +79,8 @@ virsh dominfo vm
 virsh domstate vm
 virsh domid vm            # ID（运行时）
 virsh domuuid vm          # UUID
-virsh domxml-from-native qemu-argv /path/to/qemu-cmdline.xml  # 从命令行转 XML
-virsh domxml-to-native qemu-argv vm.xml  # XML 转命令行
+virsh domxml-to-native qemu-argv vm.xml  # XML 转命令行（唯一可用的方向）
+# ⚠️ domxml-from-native（命令行转 XML）已在 libvirt 5.5.0 被移除，见 §6.1
 
 virsh start vm
 virsh shutdown vm          # ACPI 优雅关机
@@ -173,6 +173,15 @@ virsh schedinfo vm --cap 100     # 限制 CPU %
   </devices>
 </domain>
 ```
+
+> **别指望 `domxml-from-native`**：把 QEMU 命令行转成 XML 的功能因解析代码
+> 不可靠（官方原话：「连 libvirt 自己生成的命令行都转不回去」），
+> 在 libvirt 5.5.0（2019）就被移除了——现代版本报
+> 「连接驱动不支持 virConnectDomainXMLFromNative」。
+> 迁移手写 QEMU 命令只有两条路：**手写等价 XML**（如上，路径必须写绝对路径，
+> libvirt 启动 QEMU 时 cwd 是 `/`），或用 `virt-install` 生成后
+> `virsh dumpxml` 参考。踩坑实录见 [98-QA Q36](98-QA-学习问答.md)。
+> 反方向 `domxml-to-native`（§5.2）仍可用，适合反推学习 libvirt 的默认参数。
 
 ### 6.2 关键字段
 
@@ -396,6 +405,16 @@ virsh domstats lab03
 2. `qemu:///system` vs `qemu:///session` 的权限差异？
 3. 为什么生产推荐 XML 而不是命令行参数？
 4. `virsh setmem` 跟 `<currentMemory>` 哪个生效？
+
+<details>
+<summary>参考答案（先自己想再看）</summary>
+
+1. `virsh shutdown` 通过 ACPI 给客户机发「电源按钮」事件，由客户机 OS 自己走正常关机流程（杀进程、刷盘、卸载文件系统），是优雅关机；`virsh destroy` 是宿主机直接杀掉 QEMU 进程，相当于拔电源，客户机毫无准备，可能损坏文件系统。本质区别是「礼貌请求」vs「强制断电」。
+2. `qemu:///system` 连的是系统级 libvirtd，QEMU 以 `qemu` 用户（非 root）运行，能访问系统网桥、`/var/lib/libvirt` 和系统级存储池，权限受 polkit/SASL 管控；`qemu:///session` 连的是当前普通用户自己的 libvirtd，只能管自己的 VM，默认走用户态网络（slirp）、无法桥接，通常也只能访问本用户目录。
+3. 命令行参数是命令式、一次性的，改一个参数就要重敲整条，容易漏、无法审计、重启即丢；XML 是声明式配置，能被 `virsh define` 持久保存，可版本化、可 diff、可用模板/Ansible 生成，保证多主机一致且可复现，所以生产推荐 XML。
+4. `virsh setmem` 改的就是 XML 里的 `<currentMemory>`（运行时实际可用内存），加 `--live` 立即热改生效；`<memory>` 是启动时的最大内存上限（maxMemory），运行中不能超过它、一般需重启或配合内存热插拔。所以运行中生效的是 `currentMemory`，`setmem` 只动它、不动 `<memory>`。
+
+</details>
 
 ## 15. 参考资料
 

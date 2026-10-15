@@ -346,6 +346,17 @@ bash labs/scripts/start-vm.sh /tmp/test.qcow2
 2. user 模式网络能不能 ping 通 host？为什么？
 3. 把 `-vnc :0` 改成 `:0` + `password` 加密码怎么做？（提示：`qemu-system-x86_64 --help | grep password`）
 
+<details>
+<summary>参考答案（先自己想再看）</summary>
+
+1. `-cpu host` 把当前宿主 CPU 的所有 flag（指令集、MSR、特性）原样透传给 guest，性能最好；一旦迁移到 CPU 型号不同的物理机，guest 期望的指令/特性对方没有，迁移就会失败或崩溃。集群和在线迁移必须使用统一且取所有宿主能力交集的 model（如 `kvm64` 或指定同型号），保证 guest 无论迁到哪台机器看到的 CPU 都一致。
+
+2. 默认不能。QEMU 的 user（slirp）模式是在 QEMU 进程内实现的一个虚拟 NAT，它主要处理 TCP/UDP，`ping` 用的 ICMP 被视为不支持而直接丢弃。guest 能访问外网、也能用 10.0.2.2 访问宿主的部分服务，但 ping 宿主或外网通常不通。
+
+3. 用 `-vnc :0,password=on`（也写作 `-vnc :0,password`）开启密码鉴权，启动后在 monitor 里执行 `change vnc password` 设置密码。这样 VNC 客户端连接时会在握手阶段被要求输入该密码，而不是直接进入画面。
+
+</details>
+
 ## 12. 参考资料
 
 - [`refs/learn-kvm/docs/QEMU介绍.md`](../refs/learn-kvm/docs/QEMU介绍.md)

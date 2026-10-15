@@ -506,6 +506,16 @@ gdb vmlinux
 3. EPT 缺页会不会触发 VM exit 风暴？
 4. APICv 跟传统 LAPIC 模拟的 latency 差多少？
 
+<details>
+<summary>参考答案（先自己想再看）</summary>
+
+1. 没有固定值：当客户机一直跑、不触发 VM exit 时，一次 `KVM_RUN` 可以持续数毫秒甚至更久才返回；决定开销的是退出频率，而不是 ioctl 本身的固定成本。TLB miss 会让客户机陷入 EPT/页表遍历，可能触发 EPT violation 退出，因此与之相关，减少退出、用大页都能改善。
+2. 因为 VM entry/exit 必须精确地保存宿主寄存器到 VMCS host 区、恢复客户机寄存器，并严格控制 rsp、标志位和指令序列（还要处理预测执行相关的屏障）。这些寄存器级操作用 C 无法保证编译器生成的代码正确，只能以内联汇编精确编排。
+3. 会，但 KVM 会尽量收敛：对未映射页会批量预填充 EPT 条目，并借助 THP、大页减少后续 fault。只有在客户机反复触碰无法合并映射、内存属性频繁变化的页时，才可能形成持续的 EPT violation 退出风暴，通常需要大页或修正内存属性来缓解。
+4. 传统模拟下每次中断投递、EOI 都要 VM exit 到 KVM 处理 LAPIC，延迟常在微秒量级；APICv 用硬件 virtual-APIC 加 posted-interrupt，绝大多数中断可在硬件内直接注入、无需退出，延迟接近原生，主要收益是大幅减少 VM exit 次数。
+
+</details>
+
 ## 16. 参考资料
 
 - [`refs/learn-kvm/docs/KVM内核模块源码分析/KVM内核模块源码分析.md`](../refs/learn-kvm/docs/KVM内核模块源码分析/KVM内核模块源码分析.md)

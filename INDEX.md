@@ -30,6 +30,13 @@
 | 17 | [KVM 源码导读](course/17-KVM源码导读.md) | vm entry/exit | lab10 |
 | 18 | [与容器 / 云原生的取舍](course/18-与容器云原生的取舍.md) | VM vs Container | – |
 | 19 | [常见故障排查](course/19-常见故障排查.md) | troubleshooting | – |
+| 20 | [QEMU 启动虚拟机全流程](course/20-QEMU启动虚拟机全流程.md) | 启动时序、线程模型 | – |
+| 21 | [固件加载与 UEFI 启动](course/21-UEFI固件加载.md) | OVMF / pflash / Secure Boot | lab11 |
+| 22 | [机型解析与 Q35 芯片组](course/22-机型解析与Q35.md) | machine type、compat | – |
+| 23 | [添加自定义硬件实战](course/23-添加自定义硬件.md) | -device / 热插 / QOM | lab12 |
+| 24 | [为 QEMU 开发自定义设备](course/24-为QEMU开发自定义设备.md) | QOM 设备开发 | lab12 |
+| 25 | [机型与固件：客户机看到了什么](course/25-机型与固件的客户机视角.md) | 感知通道、PCIe 枚举、ARM 对照 | – |
+| 26 | [QEMU 设备与机型答疑](course/26-QEMU设备答疑.md) | 设备/机型/内存高频问答 | – |
 | 98 | [学习问答 QA](course/98-QA-学习问答.md) | 环境实践 + 硬件原理答疑 | – |
 | 99 | [附录](course/99-附录.md) | 速查表、术语 | – |
 
@@ -47,6 +54,8 @@
 | lab08 | [CPU pin + NUMA + hugepage](labs/lab08-cpu-pinning-numa.md) | lab03 | ★★★ |
 | lab09 | [实时迁移](labs/lab09-live-migration.md) | lab03 + 共享存储 | ★★★★ |
 | lab10 | [调试 KVM 内核模块](labs/lab10-debug-kernel.md) | 内核编译基础 | ★★★★★ |
+| lab11 | [UEFI 固件（OVMF）启动实战](labs/lab11-uefi-ovmf.md) | lab03 | ★★★ |
+| lab12 | [为 QEMU 添加自定义设备](labs/lab12-qemu-device.md) | lab03 + 会编译 C | ★★★★ |
 
 ## 🟨 速查（`cheatsheet/`）
 
