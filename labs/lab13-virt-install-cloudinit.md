@@ -69,10 +69,12 @@ virt-install --name u24-dev --memory 16384 --vcpus 16 --cpu host \
 
 ### 1.2 `.ms` 后缀是什么
 
-`AAVMF_CODE.ms.fd` 的 `.ms` = 固件里**预置了微软的 Secure Boot 密钥**
-（PK/KEK/db，用于验签 Windows bootloader 等）。不带 `.ms` 的 `AAVMF_CODE.fd`
-变量库是空的。对装 Ubuntu/Debian 这类自带 shim + 微软签名的发行版，两种都能启动；
-要做 Secure Boot 实验（自签内核、 enrollment）时才需要在意区别。
+`AAVMF_CODE.ms.fd` / `AAVMF_VARS.ms.fd` 这一对的 `.ms` = **配套 VARS 模板里预置了
+微软的 Secure Boot 密钥链**（PK/KEK/db，用于验签 Windows bootloader、以及走微软
+签名的 shim+grub）。不带 `.ms` 的 `AAVMF_VARS.fd` 里没有这些钥匙（Secure Boot
+不启用）。对装 Ubuntu/Debian 这类自带微软签名 shim 的发行版，两种都能启动；
+要做 Secure Boot 实验（自签内核、钥匙管理、装 Windows）才必须在意这个区别。
+x86 的 OVMF 同理：`OVMF_CODE_4M.secboot.fd` + `OVMF_VARS_4M.secboot.fd`。
 
 ### 1.3 `--machine virt-6.2` 为什么带版本号
 

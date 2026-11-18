@@ -194,7 +194,50 @@ Boot0003* Ubuntu   HD(15,GPT,6ec49856-...)/File(\EFI\ubuntu\shimx64.efi)
   存在于 vars 但标注了 auto 属性，设备没了会失效。
 - 对照第 B.2 节：空机器只有 0000/0001（UiApp/Shell）。
 
-### C.3 \EFI\BOOT\BOOTX64.EFI：万能引导路径
+### C.3 亲手写一个启动项：bcfg 全流程（真实会话）
+
+材料：lab15 的 `disk-manual.img`（ESP 里有 `\EFI\BOOT\vmlinuz.efi`，故意**不用**
+BOOTX64.EFI 这个名字，逼 OVMF 找不到可引导项）。冷启动第一幕就能看到 BDS 的
+"逐项尝试"：
+
+```text
+BdsDxe: failed to load Boot0001 "UEFI Misc Device" from PciRoot(0x0)/Pci(0x3,0x0): Not Found
+BdsDxe: loading Boot0002 "EFI Internal Shell" ...
+```
+
+在 Shell 里新增启动项并置顶（`add 0` = 插到 BootOrder 第 0 位）：
+
+```text
+Shell> bcfg boot add 0 FS0:\EFI\BOOT\vmlinuz.efi "MyLinux"
+bcfg: Add Boot0003 as 0
+
+Shell> bcfg boot dump
+Option: 00. Variable: Boot0003
+  Desc    - MyLinux                                          ← 新项排第一
+  DevPath - PciRoot(0x0)/Pci(0x3,0x0)/HD(1,GPT,B9892D94-...)/\EFI\BOOT\vmlinuz.efi
+Option: 01. Variable: Boot0000
+  Desc    - UiApp
+...
+```
+
+重启（或干脆杀掉 QEMU 再起，用同一个 vars 文件），**不进 Shell** 直接引导：
+
+```text
+BdsDxe: loading Boot0003 "MyLinux" from PciRoot(0x0)/Pci(0x3,0x0)/HD(1,GPT,...)/\EFI\BOOT\vmlinuz.efi
+BdsDxe: starting Boot0003 "MyLinux" ...
+（内核启动，进入系统）
+```
+
+这一套就是 `efibootmgr`/Windows 安装器/grub-install 在你真机上做的事：**写两个
+UEFI 变量（Boot#### 描述符 + BootOrder 顺序），存在 vars pflash 里，下次开机由
+BDS 照单执行**。vARS 文件 md5 在会话前后必然不同（对照 C.1）。
+
+顺带一个进阶观察（lab15 详述）：在 Shell 里手动引导时，整条命令行会变成内核的
+cmdline——`FS0:\EFI\BOOT\vmlinuz.efi console=ttyS0 brlab=from-shell` 启动后
+`cat /proc/cmdline` 原样可见。**UEFI 应用的"参数"就是加载选项，而内核 EFI stub
+把加载选项当命令行**。
+
+### C.4 \EFI\BOOT\BOOTX64.EFI：万能引导路径
 
 UEFI 规范规定：找不到任何 Boot#### 时，对每个块设备尝试
 `<分区>\EFI\BOOT\BOOTX64.EFI`（aarch64 上是 `BOOTAA64.EFI`）。这就是：
@@ -202,7 +245,7 @@ UEFI 规范规定：找不到任何 Boot#### 时，对每个块设备尝试
 - U 盘在**任何**机器上都能启动的原因（安装盘 ESP 里放这个路径）；
 - lab15 手工拼 ESP 的原理（把内核 EFI stub 放在这个路径，OVMF 自动加载）。
 
-### C.4 `-bios`（只读整镜像）对照实验
+### C.5 `-bios`（只读整镜像）对照实验
 
 ```bash
 qemu-system-x86_64 -machine q35 -bios /usr/share/OVMF/OVMF.fd ...   # code+vars 合一，只读 ROM
@@ -214,21 +257,20 @@ VM 请永远用 pflash 双盘（lab11 详述）。ARM 的 AAVMF 同理：`-bios 
 
 ## Part D · 解剖 GPT/ESP 磁盘
 
-拿任意一块可启动镜像（lab13 的 qcow2 转 raw，或 lab15 的 sdcard.img）：
+拿任意一块可启动镜像（lab13 的 qcow2 转 raw，或 lab15 的 disk.img）：
 
 ```bash
-qemu-img convert -O raw u24-dev.qcow2 flat.img     # 或直接用 raw 的 sdcard.img
-sfdisk -d flat.img
-# label: gpt
-# flat.img1 : ... root 等
-# flat.img14: BIOS boot 分区
-# flat.img15: ESP（类型 UUID C12A7328-F10F-11D2-BA4B-00A0C93EC93B）
+qemu-img convert -O raw u24-dev.qcow2 flat.img     # 或直接用 raw 的 disk.img
+partx --show flat.img          # 读 GPT（sfdisk -d / sgdisk -p 同理，装了哪个用哪个）
+# NR START    END SECTORS SIZE NAME UUID
+# 14  ...     BIOS boot 分区
+# 15  ...     ESP（类型 UUID C12A7328-F10F-11D2-BA4B-00A0C93EC93B）
 ```
 
 用 mtools 无 root 读 ESP 内容（offset = 起始扇区 × 512）：
 
 ```bash
-START=$(sfdisk -d flat.img | awk '/flat.img15/{gsub(",","",$2);print $2}')
+START=$(partx -o START -g -n 15 flat.img)   # 或从 partx 输出里取
 mdir -i flat.img@@${START}s ::/EFI ::/EFI/ubuntu
 # 会看到 shimx64.efi grubx64.efi ...
 ```
