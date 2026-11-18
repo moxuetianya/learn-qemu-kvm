@@ -41,6 +41,7 @@
 ## 第三阶段：生产运维（能搭能调能救）
 
 - [ ] 11 [libvirt 管理实战](course/11-libvirt管理实战.md)
+      lab13 [virt-install 半自动安装（seed + macvtap）](labs/lab13-virt-install-cloudinit.md)
 - [ ] 12 [性能调优与诊断](course/12-性能调优与诊断.md)
       lab08 [CPU pin + NUMA + hugepage](labs/lab08-cpu-pinning-numa.md)
 - [ ] 13 [实时迁移与高可用](course/13-实时迁移与高可用.md)
@@ -65,10 +66,12 @@
 - [ ] 21 [固件加载与 UEFI 启动](course/21-UEFI固件加载.md)
       lab11 [UEFI 固件（OVMF）启动实战](labs/lab11-uefi-ovmf.md)
 - [ ] 22 [机型解析与 Q35 芯片组](course/22-机型解析与Q35.md)
+      lab14 [q35 机型与 OVMF/UEFI 启动全流程观察](labs/lab14-q35-uefi.md)
 - [ ] 23 [添加自定义硬件实战](course/23-添加自定义硬件.md)
       lab12 [为 QEMU 添加自定义设备](labs/lab12-qemu-device.md)
 - [ ] 24 [为 QEMU 开发自定义设备](course/24-为QEMU开发自定义设备.md)
 - [ ] 25 [机型与固件：客户机看到了什么](course/25-机型与固件的客户机视角.md)
+      lab15 [Buildroot 构建 UEFI 可启动系统](labs/lab15-buildroot-uefi.md)
 - [ ] 26 [QEMU 设备与机型答疑](course/26-QEMU设备答疑.md)
 - [ ] 98 [学习问答 QA](course/98-QA-学习问答.md)
 - [ ] 99 [附录](course/99-附录.md)

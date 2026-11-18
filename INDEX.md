@@ -56,6 +56,9 @@
 | lab10 | [调试 KVM 内核模块](labs/lab10-debug-kernel.md) | 内核编译基础 | ★★★★★ |
 | lab11 | [UEFI 固件（OVMF）启动实战](labs/lab11-uefi-ovmf.md) | lab03 | ★★★ |
 | lab12 | [为 QEMU 添加自定义设备](labs/lab12-qemu-device.md) | lab03 + 会编译 C | ★★★★ |
+| lab13 | [virt-install 半自动安装（cloud-init seed + UEFI + macvtap）](labs/lab13-virt-install-cloudinit.md) | lab02, lab11 | ★★★★ |
+| lab14 | [q35 机型与 OVMF/UEFI 启动全流程观察](labs/lab14-q35-uefi.md) | lab11 | ★★★★ |
+| lab15 | [Buildroot 构建 UEFI 可启动系统](labs/lab15-buildroot-uefi.md) | lab11, lab14 | ★★★★★ |
 
 ## 🟨 速查（`cheatsheet/`）
 
