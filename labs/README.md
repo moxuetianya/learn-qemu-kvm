@@ -18,6 +18,9 @@
 | 10 | [调试 KVM 内核模块](lab10-debug-kernel.md) | ★★★★★ | 120 min | 内核编译 |
 | 11 | [UEFI 固件（OVMF）启动实战](lab11-uefi-ovmf.md) | ★★★ | 40 min | lab03 |
 | 12 | [为 QEMU 添加自定义设备](lab12-qemu-device.md) | ★★★★ | 90 min | lab03 + C 编译 |
+| 13 | [virt-install 半自动安装（seed + macvtap）](lab13-virt-install-cloudinit.md) | ★★★★ | 60 min | lab02, lab11 |
+| 14 | [q35 与 OVMF 启动全流程观察](lab14-q35-uefi.md) | ★★★★ | 60 min | lab11 |
+| 15 | [Buildroot 构建 UEFI 可启动系统](lab15-buildroot-uefi.md) | ★★★★★ | 90–120 min | lab11, lab14 |
 
 ## 配套脚本（`scripts/`）
 
@@ -27,6 +30,7 @@
 | [`install-qemu.sh`](scripts/install-qemu.sh) | 多发行版装 QEMU/KVM/libvirt |
 | [`verify-install.sh`](scripts/verify-install.sh) | lab02 装完后的环境自检 |
 | [`start-vm.sh`](scripts/start-vm.sh) | 一键后台启动 VM（自动选 KVM/TCG） |
+| [`mk-seed.sh`](scripts/mk-seed.sh) | 生成 cloud-init NoCloud seed ISO（lab13） |
 | [`bench-storage.sh`](scripts/bench-storage.sh) | lab04 镜像格式 + qcow2 特性对比 |
 | [`setup-bridge.sh`](scripts/setup-bridge.sh) | lab05 网桥 br0 创建/查看/还原 |
 
