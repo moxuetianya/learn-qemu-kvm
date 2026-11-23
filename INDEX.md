@@ -20,7 +20,7 @@
 | 07 | [存储虚拟化详解](course/07-存储虚拟化详解.md) | qcow2/virtio-blk/共享存储 | lab04 |
 | 08 | [网络虚拟化详解](course/08-网络虚拟化详解.md) | 5 种模式对比 | lab05 |
 | 09 | [设备虚拟化与 virtio](course/09-设备虚拟化与virtio.md) | virtio 框架、vhost | lab06 |
-| 10 | [图形与显示方案对比](course/10-图形与显示方案对比.md) | VNC/SPICE/GPU 直通 | – |
+| 10 | [图形与显示方案对比](course/10-图形与显示方案对比.md) | VNC/SPICE/QXL vs virtio-gpu/GPU 直通 | – |
 | 11 | [libvirt 管理实战](course/11-libvirt管理实战.md) | virsh/virt-manager | – |
 | 12 | [性能调优与诊断](course/12-性能调优与诊断.md) | CPU pin/NUMA/hugepage | lab08 |
 | 13 | [实时迁移与高可用](course/13-实时迁移与高可用.md) | migration | lab09 |

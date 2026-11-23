@@ -61,6 +61,13 @@
 - `glxinfo` 会诚实告诉你：`OpenGL renderer string: llvmpipe (LLVM x.x, 256 bits)`
 - 适用：无 GUI 服务器、简单桌面、嵌入式 2D 界面——够用，但别指望 3D
 
+> 顺带回答一个高频对比：**那 QXL 呢？** 它的「2D 加速」同样不涉及 GPU——guest
+> 驱动发绘图命令，QEMU 在宿主 CPU 上逐条模拟执行；而本节的 virtio-gpu 2D 是
+> guest 画好整帧后 DMA 直出，通常更快、更省 CPU。QXL 的优势只在 SPICE 远程
+> 桌面的命令级增量传输，且无 Wayland 驱动、纯 2D（连 render node 都不暴露，
+> GBM/EGL 会直接失败）。对比表与 SPICE 的分层关系见
+> [10 章 §2.4/§5.4](10-图形与显示方案对比.md)。
+
 ## 4. 路径二：VirGL —— OpenGL 加速（最常用）
 
 ### 4.1 原理
