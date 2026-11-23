@@ -73,6 +73,7 @@
 - [ ] 25 [机型与固件：客户机看到了什么](course/25-机型与固件的客户机视角.md)
       lab15 [Buildroot 构建 UEFI 可启动系统](labs/lab15-buildroot-uefi.md)
 - [ ] 26 [QEMU 设备与机型答疑](course/26-QEMU设备答疑.md)
+- [ ] 27 [虚拟机如何使用 GPU](course/27-虚拟机使用GPU.md)
 - [ ] 98 [学习问答 QA](course/98-QA-学习问答.md)
 - [ ] 99 [附录](course/99-附录.md)
 

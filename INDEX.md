@@ -37,6 +37,7 @@
 | 24 | [为 QEMU 开发自定义设备](course/24-为QEMU开发自定义设备.md) | QOM 设备开发 | lab12 |
 | 25 | [机型与固件：客户机看到了什么](course/25-机型与固件的客户机视角.md) | 感知通道、PCIe 枚举、ARM 对照 | – |
 | 26 | [QEMU 设备与机型答疑](course/26-QEMU设备答疑.md) | 设备/机型/内存高频问答 | – |
+| 27 | [虚拟机如何使用 GPU](course/27-虚拟机使用GPU.md) | virtio-gpu/VirGL/Venus/直通 | – |
 | 98 | [学习问答 QA](course/98-QA-学习问答.md) | 环境实践 + 硬件原理答疑 | – |
 | 99 | [附录](course/99-附录.md) | 速查表、术语 | – |
 
